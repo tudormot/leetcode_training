@@ -42,7 +42,6 @@ Constraints:
 
 """
 from typing import List
-from queue import PriorityQueue
 import heapq
 from collections import defaultdict
 import math
@@ -57,21 +56,54 @@ class Solution:
 
         neighbours = defaultdict(list)
         visited = defaultdict(lambda: False)
-
-
         distance = defaultdict(lambda: math.inf)
+        distance[0] = 0
+
         reached = 1
         for edge in edges:
-            neighbours[edge[0]].append((edge[1],edge[2])) # tuple containst pos0: neighbour, and pos1: distance
-            neighbours[edge[1]].append((edge[0],edge[2]))
+            neighbours[edge[0]].append((edge[1], edge[2])) # tuple containst pos0: neighbour, and pos1: distance
+            neighbours[edge[1]].append((edge[0], edge[2]))
 
-        heap = PriorityQueue() # this is a min heap, the first value of an inserted tupleis used for ordering the
-        # data
-        heap.put((0, 0)) #putting node 0 with a distance of 0
-        while True:
-            curr_node = heap.get()
-            if not curr_node:
-                break
+        heap = [(0, 0, 0)] # tuple contains pos0: distance, pos1: node "name", pos2: "parent" node "name"
+        while len(heap) > 0:
+            curr = heapq.heappop(heap)
+            print("#######")
+            print(f"curr node = {curr[1]}, at a distance from source of {curr[0]}")
+            if visited[curr[1]]:
+                # print("node already visited")
+                continue
+            # if distance[curr[1]]>maxMoves:
+            #     print("in case where we can't reach this node with the remaining juice")
+            #     reached += maxMoves - distance[curr[2]]
+            #     continue
+            else:
+                # print("we here")
+                visited[curr[1]] = True
+                distance[curr[1]] = curr[0]
+                for nb in neighbours[curr[1]]:
+                    print(f"for nb: {nb[0]}, at distance {nb[1]}")
+                    new_dist = curr[0] + nb[1] + 1
+
+                    # distance[nb[0]] = min(new_dist, distance[nb[0]])
+                    heapq.heappush(heap, (new_dist,nb[0],curr[1]))
+                    print("juice left: ", maxMoves - curr[0])
+                    if visited[nb[0]] == False:
+                        print("this nb not visited")
+                        update = min(maxMoves - curr[0], nb[1] + 1)
+                    else:
+                        print("this nb visited")
+                        reached_from_other_side = min(maxMoves - distance[nb[0]],nb[1])
+                        update = min(maxMoves - curr[0], nb[1]-reached_from_other_side)
+                    print("update = ", update)
+                    reached +=update
 
 
-        pass
+
+        return reached
+
+if __name__ == "__main__":
+    edges = [[2, 4, 2], [3, 4, 5], [2, 3, 1], [0, 2, 1], [0, 3, 5]]
+    maxMoves = 14
+    n = 5
+
+    print(Solution().reachableNodes(edges,maxMoves,n))
